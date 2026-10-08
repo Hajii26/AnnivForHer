@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match your Man</title>
+<style>
+  @font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-Italic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+
+
+  :root{
+    --navy:#0b1f4a;
+    --deep:#14346e;
+    --sky:#4a90e2;
+    --ice:#dcebfb;
+    --mist:#f2f7fd;
+    --ink:#0d1b3a;
+    --r:16px
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    font-family:"Nunito Sans",system-ui,sans-serif;
+    color:#fff;
+    background:linear-gradient(160deg,var(--navy),var(--deep) 55%,#2b5fb0);
+    min-height:100vh;
+    line-height:1.5;
+    padding:32px 16px 40px;
+    display:flex;flex-direction:column;align-items:center
+  }
+  h1,h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700}
+  :focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .hidden{display:none!important}
+
+  h1{font-size:clamp(2.2rem,7vw,3.6rem);text-align:center}
+  .sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1.1rem,3vw,1.5rem);color:var(--ice);text-align:center}
+  .status{display:flex;gap:12px;margin:18px 0;font-weight:600}
+  .status span{background:var(--mist);color:var(--navy);padding:8px 16px;border-radius:999px}
+
+  /* Board */
+  .board{
+    width:100%;max-width:520px;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,2vw,14px)
+  }
+  .card{
+    border:0;padding:0;background:none;cursor:pointer;
+    aspect-ratio:3/4;perspective:700px
+  }
+  .inner{
+    position:relative;width:100%;height:100%;
+    transform-style:preserve-3d;
+    transition:transform .5s
+  }
+  .card.flipped .inner,.card.matched .inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:var(--r);
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:grid;place-items:center;overflow:hidden;
+    box-shadow:0 8px 20px rgba(0,10,40,.35)
+  }
+  .front{background:var(--mist);border:3px solid var(--sky)}
+  .front svg{width:42%;fill:var(--sky)}
+  .back{background:#fff;transform:rotateY(180deg);border:3px solid var(--ice)}
+  .back img{width:100%;height:100%;object-fit:cover;display:block}
+  .card.matched .back{border-color:var(--sky)}
+
+  /* Overlay */
+  .modal{position:fixed;inset:0;background:rgba(5,15,40,.75);display:grid;place-items:center;padding:20px;z-index:20}
+  .modal-card{background:#fff;color:var(--ink);border-radius:20px;max-width:360px;width:100%;padding:28px;text-align:center;animation:pop .25s ease-out}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-card h2{color:var(--navy);font-size:2rem;margin-bottom:8px}
+
+  .btn{
+    display:block;width:100%;font:inherit;font-weight:600;text-align:center;text-decoration:none;
+    border:0;border-radius:12px;padding:12px 20px;margin-top:16px;cursor:pointer;
+    background:var(--deep);color:#fff;transition:transform .15s,background .15s
+  }
+  .btn:hover{background:var(--navy)}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:var(--ice);color:var(--deep)}
+  .btn.ghost:hover{background:#c8def6}
+
+  .note{margin-top:24px;text-align:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.3rem;color:var(--ice);max-width:520px}
+  .home{max-width:260px}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<h1>Memory Match</h1>
+<p class="sub">Find all the matching pairs.</p>
+
+<div class="status">
+  <span>Tries: <b id="tries">0</b> / <b id="max">12</b></span>
+  <span>Pairs: <b id="pairs">0</b> / 6</span>
+</div>
+
+<div class="board" id="board"></div>
+
+<p class="note">There's a reward once you win the game, Good Luck!</p>
+<a class="btn ghost home" href="../index.html">Back Home</a>
+
+<!-- Game Over -->
+<div class="modal hidden" id="overModal" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+  <div class="modal-card">
+    <h2 id="overTitle">Game Over</h2>
+    <p>You ran out of tries. Let's shuffle and try again!</p>
+    <button class="btn" id="retry">Play Again</button>
+  </div>
+</div>
+
+<!-- Win -->
+<div class="modal hidden" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-card">
+    <h2 id="winTitle">You Win!</h2>
+    <p>You matched every pair. Your reward is waiting!</p>
+    <!-- Put your reward page link in the href below, e.g. href="reward.html" -->
+    <a class="btn" id="goReward" href="../htmlFolders/reward.html">Go to Reward</a>
+    <button class="btn ghost" id="again">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ===== Settings =====
+const MAX_TRIES = 12;
+const REWARD_URL  = "../htmlFolders/reward.html";    // <-- your reward page (opens in the SAME tab)
+const VISIT_KEY   = "rewardVisitDone";               // must match VISIT_KEY in reward.html
+const RESTART_KEY = "gameRestartRequest";            // reward.html sets this when a reward is CONFIRMED -> the game restarts + reshuffles
+
+// Put your 6 images here (one per pair).
+// This file is assumed to be inside htmlFolders/, so paths start with ../
+const IMAGES = [
+  "../assets/images/gamecard-1.jpg",
+  "../assets/images/gamecard-2.jpg",
+  "../assets/images/gamecard-3.jpg",
+  "../assets/images/gamecard-4.jpg",
+  "../assets/images/gamecard-5.jpg",
+  "../assets/images/gamecard-6.png"
+];
+
+const $ = id => document.getElementById(id);
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 2.7 4.5 6.3 4.5c2.1 0 3.8 1.2 4.7 2.9h2c.9-1.7 2.6-2.9 4.7-2.9 3.6 0 5.4 3.7 3.9 7.2C19.5 16.4 12 21 12 21z"/></svg>';
+
+let first = null, lock = false, tries = 0, pairs = 0;
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function build() {
+  const board = $("board");
+  board.innerHTML = "";
+  shuffle([...IMAGES, ...IMAGES].map((src, i) => ({ src, id: IMAGES.indexOf(src) }))).forEach((c, n) => {
+    const b = document.createElement("button");
+    b.className = "card";
+    b.dataset.id = c.id;
+    b.setAttribute("aria-label", "Card " + (n + 1));
+    b.innerHTML =
+      '<div class="inner">' +
+        '<div class="face front">' + HEART + '</div>' +
+        '<div class="face back"><img src="' + c.src + '" alt="Memory picture"></div>' +
+      '</div>';
+    b.onclick = () => flip(b);
+    board.appendChild(b);
+  });
+}
+
+function updateStatus() {
+  $("tries").textContent = tries;
+  $("pairs").textContent = pairs;
+}
+
+function reset() {
+  first = null; lock = false; tries = 0; pairs = 0;
+  $("overModal").classList.add("hidden");
+  $("winModal").classList.add("hidden");
+  updateStatus();
+  build();
+}
+
+function flip(card) {
+  if (lock || card === first || card.classList.contains("flipped") || card.classList.contains("matched")) return;
+  card.classList.add("flipped");
+
+  if (!first) { first = card; return; }
+
+  const second = card;
+  tries++;
+  updateStatus();
+  lock = true;
+
+  if (first.dataset.id === second.dataset.id) {
+    first.classList.add("matched");
+    second.classList.add("matched");
+    first.classList.remove("flipped");
+    second.classList.remove("flipped");
+    pairs++;
+    updateStatus();
+    first = null; lock = false;
+    if (pairs === IMAGES.length) {
+      setTimeout(() => $("winModal").classList.remove("hidden"), 600);
+    } else if (tries >= MAX_TRIES) {
+      setTimeout(() => $("overModal").classList.remove("hidden"), 600);
+    }
+  } else {
+    const a = first;
+    first = null;
+    setTimeout(() => {
+      a.classList.remove("flipped");
+      second.classList.remove("flipped");
+      lock = false;
+      if (tries >= MAX_TRIES) {
+        setTimeout(() => $("overModal").classList.remove("hidden"), 400);
+        lock = true;
+      }
+    }, 1000);
+  }
+}
+
+// Winning unlocks ONE reward pick: clicking "Go to Reward" lifts reward.html's "one pick per win" lock.
+$("goReward").href = REWARD_URL;
+$("goReward").onclick = () => { try { localStorage.removeItem(VISIT_KEY); } catch (e) {} };
+
+// reward.html writes RESTART_KEY when a reward is confirmed. Until then the win screen stays as it is.
+function applyRestart() {
+  let flag = null;
+  try { flag = localStorage.getItem(RESTART_KEY); } catch (e) {}
+  if (!flag) return false;
+  try { localStorage.removeItem(RESTART_KEY); } catch (e) {}
+  reset();
+  return true;
+}
+window.addEventListener("storage", e => { if (e.key === RESTART_KEY && e.newValue) applyRestart(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) applyRestart(); });
+window.addEventListener("pageshow", e => { if (e.persisted) applyRestart(); });
+
+$("max").textContent = MAX_TRIES;
+$("retry").onclick = reset;
+$("again").onclick = reset;
+reset();
+try { localStorage.removeItem(RESTART_KEY); } catch (e) {}   // a fresh load is already a fresh game
+</script>
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rewards from King</title>
+<style>
+      @font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-Italic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+:root{--navy:#0b1f4a;--deep:#14346e;--sky:#4a90e2;--ice:#dcebfb;--night:#050b1a;--gold:#ffd98a;--green:#3ddc84}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;font-family:"Nunito Sans",system-ui,sans-serif;color:var(--ice);
+  background:radial-gradient(ellipse at 15% 0%,#2b5fb066,transparent 55%),radial-gradient(ellipse at 90% 70%,#1a4a9a55,transparent 55%),linear-gradient(180deg,var(--night),#0a1a3d);
+  background-attachment:fixed;overflow-x:hidden}
+h1,h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 48px}
+
+/* ---------- Hidden card at the top (appears when something is checked) ---------- */
+.top-card{position:sticky;top:10px;z-index:10;margin:0 auto 18px;max-width:640px;padding:14px 18px;border-radius:16px;
+  background:linear-gradient(135deg,#0f4d34,#146c47);border:2px solid var(--green);color:#eafff3;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:drop .35s ease-out}
+.top-card[hidden]{display:none}
+.top-card strong{display:block;font-size:.8rem;letter-spacing:.02em;color:#b8f5d3;margin-bottom:2px}
+.top-card p{font-weight:700;font-size:1.05rem;line-height:1.35;white-space:pre-line}
+.top-card.pulse{animation:pulse .4s ease-out}
+@keyframes drop{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulse{from{transform:scale(1.03)}to{transform:none}}
+
+/* ---------- Header ---------- */
+header{text-align:center;padding:30px 8px 22px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);color:#fff}
+header p{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1.25rem;color:var(--gold)}
+.counter{display:inline-block;margin-top:12px;padding:6px 16px;border-radius:999px;background:#ffffff14;border:1px solid #dcebfb44;font-weight:700}
+.counter.full{border-color:var(--green);color:var(--green)}
+
+/* ---------- Rewards grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;border:3px solid #dcebfb33;
+  background:linear-gradient(180deg,#10285a,#0c1d45);transition:border-color .2s,box-shadow .2s,background .2s,opacity .2s}
+.card:focus-within{outline:3px solid var(--gold);outline-offset:2px}
+.card.selected{border-color:var(--green);background:linear-gradient(180deg,#0f3a4a,#0c2f3d);box-shadow:0 0 0 2px #3ddc8444,0 0 26px #3ddc8466}
+.pick{display:block;flex:1;cursor:pointer}
+.pick input{position:absolute;opacity:0;pointer-events:none}                 /* real checkbox, hidden but keyboard-accessible */
+.slot{position:relative;aspect-ratio:4/3;display:grid;place-content:center;text-align:center;padding:8px;background:linear-gradient(135deg,var(--deep),#2b5fb0);font-weight:600;font-size:.9rem}
+.slot small{display:block;font-weight:400;font-size:.72rem;opacity:.7;margin-top:3px}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.check{position:absolute;top:10px;right:10px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--green);color:#04210f;font-size:1.2rem;font-weight:900;transform:scale(0);transition:transform .2s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.card.selected .check{transform:scale(1)}
+.card.claimed .name::after{content:"Received";display:block;margin-top:2px;font-size:.75rem;font-weight:700;color:var(--green)}
+.name{display:block;padding:12px 12px 8px;text-align:center;font-weight:700;color:#fff}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 24px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;transition:transform .15s,background .15s,opacity .15s}
+.btn:active{transform:scale(.97)}
+.info-btn{margin:2px 12px 14px;padding:8px 12px;background:#dcebfb22;color:var(--ice);border:1px solid #dcebfb55}
+.info-btn:hover{background:#dcebfb44}
+.locked .pick{cursor:default}
+.locked .card:not(.selected){opacity:.45}
+
+/* ---------- Actions ---------- */
+.actions{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:30px}
+.confirm{min-width:200px;background:linear-gradient(135deg,#ffd98a,#ffb84d);color:var(--navy);font-size:1.05rem}
+.confirm:hover{filter:brightness(1.07)}
+.confirm[aria-disabled="true"]{background:#dcebfb26;color:#9fb2d1;cursor:not-allowed}
+.hint{min-height:1.3em;font-size:.95rem;color:#b9cbe8;text-align:center}
+.reset{background:#b3261e;color:#fff}
+.home{margin-top:34px;background:var(--ice);color:var(--navy)}
+.home:hover{background:#fff}
+.bottom{text-align:center}
+.dev{margin:26px auto 0;max-width:640px;padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.35);border:1px dashed #dcebfb66;text-align:left;font-size:.9rem}
+.dev h2{font-size:1.3rem;color:var(--gold);margin-bottom:8px}
+.dev ol{padding-left:20px;margin:0 0 10px}
+.dev li{margin:4px 0;line-height:1.35}
+.dev .row{display:flex;gap:8px;flex-wrap:wrap}
+.dev .btn{padding:8px 16px;background:#dcebfb22;color:var(--ice);border:1px solid #dcebfb55}
+
+/* ---------- Popup ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(3,8,22,.78)}
+.modal[hidden]{display:none}
+.box{width:100%;max-width:400px;padding:26px 22px 22px;border-radius:20px;background:#f2f7fd;color:var(--navy);text-align:center;box-shadow:0 24px 60px rgba(0,10,40,.6);animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.88);opacity:0}to{transform:none;opacity:1}}
+.box h2{font-size:1.8rem;margin-bottom:8px}
+.box p{line-height:1.45}
+.box ul{list-style:none;padding:0;margin:12px 0 0}
+.box li{margin:6px 0;padding:8px 12px;border-radius:10px;background:#dcf7e8;border:1px solid var(--green);font-weight:700;color:#0d5a35}
+.box .row{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.box .btn{flex:1;min-width:120px;background:var(--ice);color:var(--navy)}
+.box .btn.primary{background:var(--deep);color:#fff}
+
+/* ---------- Responsive ---------- */
+@media(max-width:760px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .card:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:calc(50% - 6px)}   /* 9th card centered */
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+  <!-- Hidden card: shown automatically once at least one reward is checked -->
+  <div class="top-card" id="topCard" hidden role="status" aria-live="polite">
+    <strong id="topTitle"></strong>
+    <p id="topText"></p>
+  </div>
+
+  <header>
+    <h1>You Deserve a Reward</h1>
+    <p>Choose your baby nalang, </p>
+    <span class="counter" id="counter">Reward Limit: 0 / 3</span>
+  </header>
+
+  <main>
+    <div class="grid" id="grid"></div>
+
+    <div class="actions">
+      <button class="btn confirm" id="confirmBtn" type="button">Confirm</button>
+      <p class="hint" id="hint"></p>
+
+      <!-- DEVELOPER ONLY: remove style="display:none" to show this button. It clears the saved selection. -->
+      <button class="btn reset" id="resetBtn" type="button" style="display:none">Reset Status</button>
+    </div>
+
+    <!-- DEVELOPER ONLY: remove style="display:none" to see every reward the user confirmed (stored in localStorage key "rewardChoicesLog").
+         It works offline. You can also read the same data in DevTools > Application > Local Storage. -->
+    <section class="dev" id="devLog" style="display:none">
+      <h2>Chosen rewards log</h2>
+      <ol id="devList"></ol>
+      <div class="row">
+        <button class="btn" id="devDownload" type="button">Download JSON</button>
+        <button class="btn" id="devClear" type="button">Clear log</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="bottom">
+    <a class="btn home" href="../index.html">Back Home</a>
+  </div>
+</div>
+
+<!-- Popup (used for Info, notices and the confirmation question) -->
+<div class="modal" id="modal" hidden>
+  <div class="box" id="box" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <ul id="mList"></ul>
+    <div class="row" id="mButtons"></div>
+  </div>
+</div>
+
+<script>
+/* =====================  SETTINGS (easy to edit)  ===================== */
+const MAX_REWARDS = 3;            // total rewards one user can ever receive (across all visits)
+const ONE_PICK_PER = "quiz";         // one pick per: "quiz" (each time the quiz is passed again) or "day" (once per calendar day)
+const CLEAR_ALL_STORAGE = false;     // Reset Status: false = remove only this page's data, true = localStorage.clear()
+const STORAGE_KEY = "rewardPickerV2";
+const LOG_KEY = "rewardChoicesLog";            // permanent record of every confirmed reward (see the hidden developer panel below)
+const RESET_CLEARS_LOG = false;                // Reset Status: false = keep the record, true = erase it too
+const LOGIN_KEY = "siteLogin";                  // same key as in index.html: keeps the user logged in when they go back home
+const QUIZ_RESTART_KEY = "quizRestartRequest";   // must match RESTART_KEY in quiz.html: tells the quiz to restart (shuffled) after a reward is confirmed
+const GAME_RESTART_KEY = "gameRestartRequest";   // must match RESTART_KEY in game.html: the memory game restarts (reshuffled) after a reward is confirmed
+const VISIT_KEY = "rewardVisitDone"; // localStorage flag: "this quiz pass already used its pick" (quiz.html clears it when Reward is clicked; keep the name the same in both files)
+const INFO_MESSAGE = "The item will be given by developer king. Not today.";
+/* Developer tools on a phone: open reward.html?dev=SECRET to show the Reset Status button and the choices log.
+   Change the secret, or set it to "" to turn this off. Normal visitors never see them. */
+const DEV_SECRET = "letmein";
+if (DEV_SECRET && new URLSearchParams(location.search).get("dev") === DEV_SECRET) {
+  window.addEventListener("DOMContentLoaded", () => {
+    ["resetBtn", "devLog"].forEach(id => { const n = document.getElementById(id); if (n) n.style.display = ""; });
+  });
+}
+
+/* The 9 rewards. Put each image path in "img" (an empty or missing file just shows the placeholder). */
+const REWARDS = [
+  { id: "r1", label: "Brow Gel", img: "../assets/images/reward-img-1.png" },
+  { id: "r2", label: "Cushion Foundation", img: "../assets/images/reward-img-2.jpg" },
+  { id: "r3", label: "Clear Straps ",   img: "../assets/images/reward-img-3.jpg" },
+  { id: "r4", label: "Pandesal ni King",        img: "../assets/images/reward-img-4.jpg" },
+  { id: "r5", label: "Mystery Reward",      img: "../assets/images/reward-img-5.jpg" },
+  { id: "r6", label: "Sunscreen",       img: "../assets/images/reward-img-6.png" },
+  { id: "r7", label: "200 Robux",           img: "../assets/images/reward-img-7.jpg" },
+  { id: "r8", label: "Tablet Case", img: "../assets/images/reward-img-8.png" },
+  { id: "r9", label: "200 pesos ni King",        img: "../assets/images/reward-img-9.jpg" }
+];
+
+/* =====================  SAVED STATE (localStorage)  =====================
+   claimed : rewards confirmed on earlier visits (kept forever, max MAX_REWARDS)
+   pending : the one reward picked on this visit but not confirmed yet
+   lastDay : date of the last confirmation (used when ONE_PICK_PER = "day")      */
+const freshState = () => ({ claimed: [], pending: null, lastDay: "" });
+let memoryCopy = null, visitFallback = false;            // used only if browser storage is blocked
+const known = id => REWARDS.some(r => r.id === id);
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (s && Array.isArray(s.claimed)) {
+      const claimed = s.claimed.filter((id, i, a) => known(id) && a.indexOf(id) === i).slice(0, MAX_REWARDS);
+      const pending = known(s.pending) && !claimed.includes(s.pending) ? s.pending : null;
+      return { claimed, pending, lastDay: typeof s.lastDay === "string" ? s.lastDay : "" };
+    }
+  } catch (e) {}
+  return memoryCopy ? JSON.parse(JSON.stringify(memoryCopy)) : freshState();
+}
+function saveState() {
+  memoryCopy = JSON.parse(JSON.stringify(state));
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+let state = loadState();
+
+/* =====================  VISIT RULES  ===================== */
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+function visitDone() {                                   // has this visit already used its one pick?
+  if (ONE_PICK_PER === "day") return state.lastDay === today();
+  try { return localStorage.getItem(VISIT_KEY) === "1"; } catch (e) { return visitFallback; }
+}
+function markVisitDone() {
+  state.lastDay = today();
+  try { localStorage.setItem(VISIT_KEY, "1"); } catch (e) { visitFallback = true; }
+}
+const again = () => ONE_PICK_PER === "day" ? "Come back tomorrow" : "Pass the quiz again";
+const capReached = () => state.claimed.length >= MAX_REWARDS;
+const canPick = () => !capReached() && !visitDone();
+
+/* =====================  PAGE ELEMENTS  ===================== */
+const $ = id => document.getElementById(id);
+const grid = $("grid"), counter = $("counter"), hint = $("hint"), confirmBtn = $("confirmBtn");
+const topCard = $("topCard"), topTitle = $("topTitle"), topText = $("topText");
+const labelOf = id => REWARDS.find(r => r.id === id).label;
+const cards = {};                                        // id -> { card, input }
+
+/* =====================  BUILD THE 9 BOXES  ===================== */
+REWARDS.forEach((r, i) => {
+  const card = document.createElement("article");
+  card.className = "card";
+
+  // clicking the image or the text toggles the hidden checkbox
+  const pick = document.createElement("label");
+  pick.className = "pick";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = "reward";
+  input.value = r.id;
+
+  const slot = document.createElement("span");          // image slot
+  slot.className = "slot";
+  slot.innerHTML = `Image slot ${i + 1}<small></small>`;
+  slot.querySelector("small").textContent = r.img;
+  const img = document.createElement("img");
+  img.alt = r.label;
+  img.onload = () => slot.replaceChildren(img, check);
+  img.onerror = () => img.remove();
+  img.src = r.img;
+  const check = document.createElement("span");
+  check.className = "check";
+  check.textContent = "✓";
+  check.setAttribute("aria-hidden", "true");
+  slot.appendChild(check);
+
+  const name = document.createElement("span");          // text label below the image
+  name.className = "name";
+  name.textContent = r.label;
+  pick.append(input, slot, name);
+
+  const info = document.createElement("button");        // Info button
+  info.type = "button";
+  info.className = "btn info-btn";
+  info.textContent = "Info";
+  info.setAttribute("aria-label", "Info about " + r.label);
+  info.onclick = () => openModal({ title: r.label, text: INFO_MESSAGE, buttons: [{ label: "OK", primary: true }] });
+
+  input.addEventListener("change", () => onToggle(r.id, input));
+  card.append(pick, info);
+  grid.appendChild(card);
+  cards[r.id] = { card, input };
+});
+
+/* =====================  SELECTION RULES  ===================== */
+/* Why a pick is not allowed right now (null = allowed). Used for clicks on the boxes and on Confirm. */
+function blockedMessage(id) {
+  if (capReached()) return { title: "Limit reached", text: `Ba is wal na po.` };
+  if (visitDone())  return { title: "Play muna po bago get another Reward."};
+  if (id && state.claimed.includes(id)) return { title: "Oops!", text: "Maximum of one item only. Pick a different one po." };
+  return null;
+}
+function showBlocked(block) { openModal({ title: block.title, text: block.text, buttons: [{ label: "OK", primary: true }] }); }
+
+function onToggle(id, input) {
+  const block = blockedMessage(id);
+  if (block) {                                           // limit reached / already picked / already received
+    input.checked = state.claimed.includes(id) || state.pending === id;
+    showBlocked(block);
+    return;
+  }
+  state.pending = input.checked ? id : null;             // one choice only: a new pick replaces the old one
+  saveState();
+  render(true);
+}
+
+function render(animate) {
+  const open = canPick();
+  REWARDS.forEach(r => {
+    const claimed = state.claimed.includes(r.id), chosen = state.pending === r.id;
+    const c = cards[r.id];
+    c.card.classList.toggle("claimed", claimed);
+    c.card.classList.toggle("selected", claimed || chosen);
+    c.input.checked = claimed || chosen;
+    c.input.setAttribute("aria-disabled", String(claimed || !open));
+  });
+  document.body.classList.toggle("locked", !open);
+
+  counter.textContent = `Rewards Limit: ${state.claimed.length} / ${MAX_REWARDS}`;
+  counter.classList.toggle("full", capReached());
+
+  // hidden card at the top: visible once something is picked or already received
+  const received = state.claimed.map(labelOf).join(" • ");
+  topCard.hidden = !state.pending && state.claimed.length === 0;
+  if (!topCard.hidden) {
+    if (state.pending) {
+      topTitle.textContent = "Take Your Time, my baby";
+      topText.textContent = "";
+    } else {
+      topTitle.textContent = `Rewards Chosen (${state.claimed.length}/${MAX_REWARDS})`;
+      topText.textContent = " • " + received;
+    }
+    if (animate) { topCard.classList.remove("pulse"); void topCard.offsetWidth; topCard.classList.add("pulse"); }
+  }
+
+  // confirm button + hint
+  confirmBtn.setAttribute("aria-disabled", open && state.pending ? "false" : "true");
+  confirmBtn.textContent = capReached() ? "All rewards choosen will be processed by your dearest King" : visitDone() ? "Confirmed" : "Confirm";
+  hint.textContent = capReached() ? `You reached your Limit. Thank you!`
+                   : visitDone() ? `Don't worry, your pick is saved.`
+                   : state.pending ? "Press Confirm po baby."
+                   : "Choose your Reward.";
+}
+
+/* =====================  CONFIRM  ===================== */
+confirmBtn.addEventListener("click", () => {
+  const block = blockedMessage(null);
+  if (block) { showBlocked(block); return; }
+  if (!state.pending) {
+    openModal({ title: "Pick a Reward po muna", buttons: [{ label: "OK", primary: true }] });
+    return;
+  }
+  const chosen = state.pending;
+  openModal({
+    title: "Are you sure?",
+    text: "You cannot Undo once processed.",
+    list: [labelOf(chosen)],
+    buttons: [
+      { label: "Cancel" },
+      { label: "Yes", primary: true, onClick: () => {
+          state.claimed.push(chosen);
+          state.pending = null;
+          markVisitDone();
+          saveState();
+          logChoice(chosen);                                  // permanent record for the developer
+          try { localStorage.setItem(LOGIN_KEY, String(Date.now())); } catch (e) {}   // claimed a reward: no login screen when returning home
+          try { localStorage.setItem(QUIZ_RESTART_KEY, String(Date.now())); } catch (e) {}
+          try { localStorage.setItem(GAME_RESTART_KEY, String(Date.now())); } catch (e) {}   // quiz restarts only now, not when Reward was merely clicked
+          render(true);
+          const left = MAX_REWARDS - state.claimed.length;
+          setTimeout(() => openModal({
+            title: "Enjoy my baby!",
+            text: left > 0 ? `Play another Game to get more rewards.`
+                           : `That was your last reward. Thank you po!`,
+            buttons: [{ label: "OK", primary: true }]
+          }), 0);
+        } }
+    ]
+  });
+});
+
+/* =====================  CHOSEN-REWARDS LOG (localStorage)  =====================
+   One entry is added every time a reward is CONFIRMED. It is stored under LOG_KEY, separate from the
+   picker state, so it survives Reset Status (unless RESET_CLEARS_LOG is true), closing the browser and going offline. */
+let memoryLog = [];                                      // used only if localStorage is blocked
+function readLog() {
+  try { const a = JSON.parse(localStorage.getItem(LOG_KEY)); if (Array.isArray(a)) return a; } catch (e) {}
+  return memoryLog.slice();
+}
+function writeLog(arr) {
+  memoryLog = arr.slice();
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+function logChoice(id) {
+  const log = readLog(), now = new Date();
+  log.push({
+    n: log.length + 1,                                   // running number in this log
+    rewardNumber: state.claimed.length,                  // 1, 2 or 3 of MAX_REWARDS
+    id, label: labelOf(id),
+    chosenAt: now.toISOString(),                         // exact time (UTC)
+    chosenAtLocal: now.toLocaleString()                  // time on the user's device
+  });
+  writeLog(log);
+  renderLog();
+}
+function renderLog() {
+  const list = $("devList"), log = readLog();
+  list.replaceChildren(...(log.length ? log : [null]).map(e => {
+    const li = document.createElement("li");
+    li.textContent = e ? `${e.label} (${e.id}) \u2013 reward ${e.rewardNumber}/${MAX_REWARDS} \u2013 ${e.chosenAtLocal}` : "Nothing chosen yet.";
+    return li;
+  }));
+}
+$("devDownload").addEventListener("click", () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(readLog(), null, 2)], { type: "application/json" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: "reward-log.json" });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+$("devClear").addEventListener("click", () => openModal({
+  title: "Clear the log?", text: "This erases the saved record of chosen rewards.",
+  buttons: [{ label: "Cancel" }, { label: "Clear", primary: true, onClick: () => { writeLog([]); renderLog(); } }]
+}));
+
+/* =====================  RESET STATUS (button is hidden in the HTML) =====================  */
+$("resetBtn").addEventListener("click", () => {
+  try { CLEAR_ALL_STORAGE ? localStorage.clear() : localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  try { localStorage.removeItem(VISIT_KEY); sessionStorage.removeItem(VISIT_KEY); } catch (e) {}
+  memoryCopy = null; visitFallback = false;
+  if (RESET_CLEARS_LOG) writeLog([]);
+  state = freshState();
+  render(false);
+});
+
+/* =====================  POPUP  ===================== */
+const modal = $("modal"), mTitle = $("mTitle"), mText = $("mText"), mList = $("mList"), mButtons = $("mButtons");
+let lastFocus = null;
+
+function openModal({ title, text, list = [], buttons }) {
+  lastFocus = document.activeElement;
+  mTitle.textContent = title;
+  mText.textContent = text;
+  mList.replaceChildren(...list.map(t => Object.assign(document.createElement("li"), { textContent: t })));
+  mButtons.replaceChildren(...buttons.map(b => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "btn" + (b.primary ? " primary" : "");
+    el.textContent = b.label;
+    el.onclick = () => { closeModal(); if (b.onClick) b.onClick(); };
+    return el;
+  }));
+  modal.hidden = false;
+  (mButtons.querySelector(".primary") || mButtons.firstChild).focus();
+}
+function closeModal() {
+  if (modal.hidden) return;
+  modal.hidden = true;
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+/* keep several open tabs in sync */
+window.addEventListener("storage", e => {
+  if (e.key === STORAGE_KEY || e.key === null) { state = loadState(); render(false); }
+  if (e.key === LOG_KEY || e.key === null) renderLog();
+});
+
+render(false);
+renderLog();
+if (capReached()) showBlocked(blockedMessage(null));     // limit already reached: tell the user as soon as the page opens
+</script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question and Answer</title>
+<style>
+  @font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-VariableFont_wght.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../assets/fonts/CormorantGaramond-Italic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  src: url("../assets/fonts/NunitoSans.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+:root{--navy:#0b1f4a;--deep:#14346e;--sky:#4a90e2;--ice:#dcebfb;--mist:#f2f7fd;--night:#050b1a;--gold:#ffd98a;--rose:#ff9bbd}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;font-family:"Nunito Sans",system-ui,sans-serif;color:var(--ice);background:radial-gradient(ellipse at 20% 0%,#2b5fb099,transparent 55%),linear-gradient(160deg,var(--navy),var(--deep) 60%,#2b5fb0);background-attachment:fixed;overflow-x:hidden}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+h1,h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700}
+
+.page-title{text-align:center;padding:48px 16px;font-size:clamp(2rem,6vw,3.2rem);color:#fff}
+.page-title small{display:block;font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:500;font-size:1.3rem;color:var(--gold)}
+
+/* Pop-up */
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px 16px 84px;background:rgba(3,10,30,.78);backdrop-filter:blur(3px);overflow-y:auto}
+.card{width:100%;max-width:460px;background:var(--mist);color:var(--navy);border-radius:24px;padding:26px 22px 24px;box-shadow:0 24px 60px rgba(0,10,40,.6);text-align:center;animation:pop .3s ease-out;position:relative}
+@keyframes pop{from{transform:scale(.88);opacity:0}to{transform:scale(1);opacity:1}}
+.count{font-weight:700;font-size:.9rem;color:var(--deep)}
+.bar{height:8px;border-radius:6px;background:var(--ice);margin:10px 0 22px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--deep));transition:width .4s}
+.q{font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(1.5rem,5vw,1.9rem);line-height:1.2;margin-bottom:20px}
+
+/* Multiple choice */
+.opts{display:grid;gap:9px;grid-template-columns:1fr 1fr}
+.opt{font:inherit;font-weight:600;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid var(--ice);background:#fff;color:var(--navy);cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.opt:hover{border-color:var(--sky);background:#eef5fd}
+.opt.picked{background:var(--deep);border-color:var(--deep);color:#fff;transform:scale(.98)}
+.opt:disabled{cursor:default}
+@media(max-width:420px){.opts{grid-template-columns:1fr}}
+
+/* Yes / No */
+.yn{display:flex;justify-content:center;align-items:center;gap:22px;min-height:130px;padding:10px 0}
+.btn{font:inherit;font-weight:700;border:0;border-radius:14px;padding:13px 30px;cursor:pointer;transition:transform .2s,background .15s,left .25s,top .25s}
+.yes{background:var(--deep);color:#fff;font-size:1.05rem}
+.yes:hover{background:var(--navy)}
+.no{background:var(--ice);color:var(--deep);font-size:1rem}
+.no.run{position:fixed;z-index:40;box-shadow:0 6px 18px rgba(0,10,40,.4)}
+.hint{min-height:1.4em;margin-top:6px;font-style:italic;color:var(--deep);font-size:.95rem}
+
+/* Result */
+.result h2{font-size:clamp(1.8rem,6vw,2.4rem);margin:4px 0 8px}
+.score{font-weight:700;color:var(--deep);margin-bottom:14px}
+.msg{font-family:"Cormorant Garamond",serif;font-size:1.6rem;font-weight:700;line-height:1.2;margin:10px 0 22px}
+.msg.good{color:#0d3d8f}
+.msg.bad{color:#a8325a}
+.actions{display:grid;gap:10px}
+.btn.reward{background:linear-gradient(135deg,#ffd98a,#ffb84d);color:var(--navy);text-decoration:none;display:block}
+.btn.reward[aria-disabled="true"]{background:var(--ice);color:#7c8aa3;pointer-events:none}
+.btn.retry{background:var(--deep);color:#fff}
+
+/* Back Home: always visible at the bottom, above the pop-up overlay */
+.home{position:fixed;z-index:50;left:50%;bottom:18px;translate:-50% 0;text-decoration:none;font-weight:700;color:var(--navy);background:var(--gold);padding:12px 30px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:transform .15s}
+.home:hover{transform:translateY(-2px)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Answer the Questions<small></small></h1>
+
+<div class="overlay" id="overlay">
+  <div class="card" id="card" role="dialog" aria-modal="true" aria-live="polite"></div>
+</div>
+
+<!-- Back Home: change href to your homepage -->
+<a class="home" id="home" href="../index.html">Back Home</a>
+
+<script>
+/* =====================  SETTINGS (edit these)  ===================== */
+const HOME_URL   = "../index.html";                    // where "Back Home" goes
+const REWARD_URL = "../htmlFolders/reward.html";    // <-- put your Reward link here
+const PASS_MARK  = 11;                               // correct answers needed to pass (out of 12)
+const STORAGE_KEY = "loveQuizProgress";
+const VISIT_KEY   = "rewardVisitDone";               // must match VISIT_KEY in reward.html
+const RESTART_KEY = "quizRestartRequest";           // reward.html sets this when a reward is CONFIRMED -> quiz restarts + shuffles
+const SHUFFLE_OPTIONS = true;                       // new attempts (after a reward / retake) also shuffle the answer options
+const SHUFFLE_FIRST_ATTEMPT_OPTIONS = true;         // true: options are shuffled from the very first attempt too (questions still start in original order); false: only after a retake / reward
+const PIN_ABOVE_OPTIONS = true;                     // keep "All of the above" / "None of the above" at the bottom so they still make sense
+const KEEP_YES_NO_AT_1_AND_5 = true;                // true: Yes/No questions stay at question 1 and 5 (the other 10 are shuffled); false: shuffle all 12
+
+/* type "yn"  = Yes/No (questions 1 and 5; "Yes" counts as correct)
+   type "mc"  = 6 options, "answer" is the index (0-5) of the correct option   */
+const QUESTIONS = [
+  { type: "yn", q: "Do you love me?" },                                                                                       // Q1
+  { type: "mc", q: "what is my Phone number?", options: ["09925337477","09938373377","09939383377","09949383377","All of the above","None of the above"], answer: 2 },      // Q2
+  { type: "mc", q: "What is my normal weight range?", options: ["66-69 kg","70-76 kg","59-66 kg","76-78 kg","70-76 kg","80-86 kg"], answer: 3 },       // Q3
+  { type: "mc", q: "Mabuti pa sa _____ may pag-asang manalo, 'di tulad sa'yo _________", options: ["Loto, Imposible","Lote, Imposible","Lotoo, Imposible","Lotto, Imposibele","Lutto, Imposible","Lotto, Imposible"], answer: 5 }, // Q4
+  { type: "yn", q: "Will you wash plates when we are living together?" },                                                                         // Q5
+  { type: "mc", q: "Which one is my favorite?", options: ["K-drama","Anime","Food","Ayesa","Roblox","Cartoon","None"], answer: 3 },       // Q6
+  { type: "mc", q: "What is the Question to this answer? \"Blue\"", options: ["What is our favorite color?","What is the color of my soundcore Earbuds?","What is the color of my Powerbank?","What color starts with letter \"B\"?","White + Purple + Green = ?","Cordon _____?"], answer: 0 },                  // Q7
+  { type: "mc", q: "How much I Love You?", options: ["Much","Very Much","Not Much","A lot","Super duper so Much and more more more infinity much","1 Table spoon of love"], answer: 4 },  // Q8
+  { type: "mc", q: "What is our call sign?", options: ["Love","Sugar","Baby","Darling","Sister","Sweetiepie"], answer: 2 },               // Q9
+  { type: "mc", q: "Which hormone is nicknamed the 'love hormone'?", options: ["Insulin","Cortisol","Adrenaline","Melatonin","Thyroxine","Oxytocin"], answer: 5 }, // Q10
+  { type: "mc", q: "What is the Day Today?", options: ["9","10","16","14","11","12"], answer: 4 },                         // Q11
+  { type: "mc", q: "On which hand is the wedding ring traditionally worn in many Western countries?", options: ["Hintuturo","Hinlalaki","Hinliliit","Himpapakyu","Palasingsingan","All of the above"], answer: 4 } // Q12
+];
+const TOTAL = QUESTIONS.length;
+
+/* =====================  SAVED PROGRESS  ===================== */
+// state: i = current question index, answers = chosen answers so far, done = quiz finished, noCount = "No" clicks on current Yes/No
+const identity = () => QUESTIONS.map((_, i) => i);
+const validOrder = o => Array.isArray(o) && o.length === TOTAL && new Set(o).size === TOTAL && o.every(n => Number.isInteger(n) && n >= 0 && n < TOTAL);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function makeOrder() {                              // order[k] = which question is shown as number k+1
+  if (!KEEP_YES_NO_AT_1_AND_5) return shuffle(identity());
+  const yn = shuffle(identity().filter(i => QUESTIONS[i].type === "yn"));
+  const mc = shuffle(identity().filter(i => QUESTIONS[i].type !== "yn"));
+  const slots = [0, 4];                             // question 1 and question 5
+  const rest = shuffle([...yn.slice(slots.length), ...mc]);
+  return identity().map(k => slots.includes(k) && yn.length ? yn.shift() : rest.shift());
+}
+const isPerm = (a, n) => Array.isArray(a) && a.length === n && new Set(a).size === n && a.every(x => Number.isInteger(x) && x >= 0 && x < n);
+const identityOpts = () => QUESTIONS.map(q => q.options ? q.options.map((_, i) => i) : []);
+const validOptOrder = o => Array.isArray(o) && o.length === TOTAL && QUESTIONS.every((q, k) => q.options ? isPerm(o[k], q.options.length) : true);
+function makeOptionOrder(q) {                       // optOrder[question][k] = which original option is shown in slot k
+  const all = q.options.map((_, i) => i);
+  const pinned = PIN_ABOVE_OPTIONS ? all.filter(i => /of the above/i.test(q.options[i])) : [];
+  return [...shuffle(all.filter(i => !pinned.includes(i))), ...pinned];
+}
+// fresh(true) = brand-new attempt with shuffled questions + options; fresh() = original order (first visit)
+const fresh = shuffled => ({ i: 0, answers: [], done: false, noCount: 0, order: shuffled ? makeOrder() : identity(),
+  optOrder: SHUFFLE_OPTIONS && (shuffled || SHUFFLE_FIRST_ATTEMPT_OPTIONS) ? QUESTIONS.map(q => q.options ? makeOptionOrder(q) : []) : identityOpts() });
+let memoryOnly = null;                              // fallback if localStorage is blocked
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (s && Number.isInteger(s.i) && Array.isArray(s.answers)) { const st = Object.assign(fresh(), s); if (!validOrder(st.order)) st.order = identity(); if (!validOptOrder(st.optOrder)) st.optOrder = identityOpts(); return st; }
+  } catch (e) {}
+  return memoryOnly || fresh();
+}
+function save() {
+  memoryOnly = state;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+let state = load();
+if (state.i >= TOTAL) state.done = true;
+
+document.getElementById("home").href = HOME_URL;
+const card = document.getElementById("card");
+
+/* =====================  RENDERING  ===================== */
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function render() {
+  card.replaceChildren();
+  card.style.animation = "none"; card.offsetWidth; card.style.animation = "";
+  if (state.done) return renderResult();
+
+  const item = QUESTIONS[state.order[state.i]];
+  const head = el("div", "count", `Question ${state.i + 1} of ${TOTAL}`);
+  const bar = el("div", "bar"); const fill = el("i"); bar.appendChild(fill);
+  card.append(head, bar, el("h2", "q", item.q));
+  requestAnimationFrame(() => fill.style.width = (state.i / TOTAL * 100) + "%");
+
+  if (item.type === "yn") renderYesNo(); else renderChoices(item, state.order[state.i]);
+}
+
+/* ---- Multiple choice (6 options) ---- */
+function renderChoices(item, qi) {
+  const box = el("div", "opts");
+  state.optOrder[qi].forEach(idx => {                // idx = ORIGINAL option number, so scoring never changes
+    const b = el("button", "opt", item.options[idx]);
+    b.type = "button";
+    b.onclick = () => {
+      box.querySelectorAll("button").forEach(x => x.disabled = true);   // stop double clicks
+      b.classList.add("picked");
+      setTimeout(() => answer(idx), 350);
+    };
+    box.appendChild(b);
+  });
+  card.appendChild(box);
+}
+
+/* ---- Yes / No (Q1 and Q5) ---- */
+const teases = ["Are you sure?", "Hmm, try again.", "Nubayannn", "Tatampo nako nyan", "The Yes button is getting bigger...", "Just say Yes!"];
+
+function renderYesNo() {
+  const row = el("div", "yn");
+  const yes = el("button", "btn yes", "Yes");
+  const no  = el("button", "btn no", "No");
+  yes.type = no.type = "button";
+  const hint = el("p", "hint", "");
+  row.append(yes, no);
+  card.append(row, hint);
+
+  applyYesScale(yes);
+  if (state.noCount > 0) hint.textContent = teases[(state.noCount - 1) % teases.length];
+
+  yes.onclick = () => answer("yes");
+  no.onclick = () => {
+    state.noCount++;                                // "No" never advances: Yes grows, No runs away
+    save();
+    applyYesScale(yes);
+    moveNo(no, yes);
+    hint.textContent = teases[(state.noCount - 1) % teases.length];
+  };
+}
+
+function yesScale() { return Math.min(1 + state.noCount * 0.5, 12); }   // slightly larger each time, capped at 2x
+function applyYesScale(yes) { yes.style.transform = `scale(${yesScale()})`; }
+
+function moveNo(no, yes) {
+  const m = 12, bottomGap = 76;                     // keep clear of screen edges and the Back Home button
+  const w = no.offsetWidth, h = no.offsetHeight;
+  no.classList.add("run");
+
+  // area the (scaled) Yes button will occupy, so No doesn't land on top of it
+  const yr = yes.getBoundingClientRect();
+  const s = yesScale(), cx = yr.left + yr.width / 2, cy = yr.top + yr.height / 2;
+  const yw = yes.offsetWidth * s, yh = yes.offsetHeight * s;
+  const avoid = { l: cx - yw / 2 - 10, r: cx + yw / 2 + 10, t: cy - yh / 2 - 10, b: cy + yh / 2 + 10 };
+
+  const maxX = Math.max(m, innerWidth - w - m);
+  const maxY = Math.max(m, innerHeight - h - bottomGap);
+  let x, y;
+  for (let t = 0; t < 40; t++) {
+    x = m + Math.random() * (maxX - m);
+    y = m + Math.random() * (maxY - m);
+    const overlaps = x < avoid.r && x + w > avoid.l && y < avoid.b && y + h > avoid.t;
+    if (!overlaps) break;
+  }
+  no.style.left = x + "px";
+  no.style.top = y + "px";
+}
+
+/* ---- Moving on ---- */
+function answer(value) {
+  state.answers[state.i] = value;
+  state.i++;
+  state.noCount = 0;
+  if (state.i >= TOTAL) state.done = true;
+  save();
+  render();
+}
+
+function score() {
+  return state.order.reduce((n, qi, k) => {
+    const item = QUESTIONS[qi], a = state.answers[k];
+    return n + (item.type === "yn" ? (a === "yes" ? 1 : 0) : (a === item.answer ? 1 : 0));
+  }, 0);
+}
+
+/* ---- Result ---- */
+function renderResult() {
+  const got = score(), passed = got >= PASS_MARK;
+  const wrap = el("div", "result");
+  wrap.append(
+    el("div", "count"),
+    el("h2", "", passed ? "You passed!" : "Better Luck next time!"),
+    el("p", "score", `Score: ${got} / ${TOTAL}  (Passing Score: ${PASS_MARK})`),
+    el("p", "msg " + (passed ? "good" : "bad"), passed ? "Kiss mo ako 12 times to get a Reward." : "10 kisses to Retake. Add 3 to Boost Luck.")
+  );
+
+  const actions = el("div", "actions");
+  const reward = el("a", "btn reward", "Reward");
+  if (passed) { reward.href = REWARD_URL;                         // opens in the SAME tab
+    // a new pick is allowed again each time the quiz is passed: clicking Reward lifts reward.html's "one pick per visit" lock
+    reward.onclick = () => { try { localStorage.removeItem(VISIT_KEY); } catch (e) {} };
+  }
+  else { reward.setAttribute("aria-disabled", "true"); reward.tabIndex = -1; }
+  actions.appendChild(reward);
+
+  if (!passed) {
+    const retry = el("button", "btn retry", "Retake");
+    retry.type = "button";
+    retry.onclick = () => { state = fresh(true); save(); render(); };
+    actions.appendChild(retry);
+  }
+  wrap.appendChild(actions);
+  card.appendChild(wrap);
+}
+
+window.addEventListener("resize", () => {           // keep a running "No" button on screen after resizing
+  const no = document.querySelector(".no.run");
+  if (!no) return;
+  no.style.left = Math.min(parseFloat(no.style.left), innerWidth - no.offsetWidth - 12) + "px";
+  no.style.top  = Math.min(parseFloat(no.style.top),  innerHeight - no.offsetHeight - 76) + "px";
+});
+
+/* =====================  RESTART AFTER A REWARD IS CHOSEN  ===================== */
+// reward.html writes RESTART_KEY when the user confirms a reward. Until then the quiz keeps its result.
+function applyRestart() {
+  let flag = null;
+  try { flag = localStorage.getItem(RESTART_KEY); } catch (e) {}
+  if (!flag) return false;
+  try { localStorage.removeItem(RESTART_KEY); } catch (e) {}
+  state = fresh(true);                              // restart with shuffled questions
+  save();
+  return true;
+}
+window.addEventListener("storage", e => {           // quiz tab still open while the reward is chosen in another tab
+  if (e.key === RESTART_KEY && e.newValue) { if (applyRestart()) render(); }
+  else if (e.key === STORAGE_KEY && e.newValue) { state = load(); render(); }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && applyRestart()) render(); });
+window.addEventListener("pageshow", e => { if (e.persisted && applyRestart()) render(); });
+
+applyRestart();
+render();
+</script>
+</body>
+</html>
